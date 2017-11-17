@@ -656,7 +656,7 @@ def pingcmdstrings (osname, ipv) :
     if osname == "Linux" :
         if ipv == 4 : return "ping -W 1 -c 1"
         if ipv == 6 : return "ping6 -i 1 -c 1"
-        if ipv == "arp" : return "arping -W 1 -c 1"
+        if ipv == "arp" : return "sudo arping -w 1000000 -c 1"
     elif osname == "Darwin" :
         if ipv == 4 : return "ping -W 1000 -c 1"
         if ipv == 6 : return "ping6 -i 1 -c 1"
