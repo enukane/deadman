@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 #
 # original software is "pingman".
@@ -17,6 +17,7 @@ import curses
 import thread
 import locale
 import datetime
+from launchpad import Launchpad
 from optparse import OptionParser
 
 locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
@@ -48,6 +49,7 @@ DOWN_COLOR = 3
 
 RTT_SCALE = 10
 CONFIGFILE = "deadman.conf"
+USE_MIDI = False
 
 SSH_CONNECT_TIMEOUT = 3
 
@@ -306,6 +308,10 @@ class CursesCtrl () :
 
     def __init__ (self, stdscr) :
         self.stdscr = stdscr
+        self.use_midi = USE_MIDI
+        if self.use_midi :
+            self.launchpad = Launchpad()
+            self.launchpad.clear_color()
         return
 
     def key_thread (self, *args) :
@@ -505,6 +511,17 @@ class CursesCtrl () :
         self.stdscr.move (0, 0)
         self.stdscr.refresh ()
 
+        if self.use_midi :
+            if target.state :
+                if target.rtt < RTT_SCALE * 5 :
+                    self.launchpad.set_color(number -1, Launchpad.COLOR_GREEN)
+                elif target.rtt < RTT_SCALE * 10 :
+                    self.launchpad.set_color(number -1, Launchpad.COLOR_YELLOWGREEN)
+                else :
+                    self.launchpad.set_color(number -1, Launchpad.COLOR_YELLOW)
+            else :
+                self.launchpad.set_color(number -1, Launchpad.COLOR_RED)
+
         return
         
     def print_arrow (self, number) :
@@ -702,11 +719,16 @@ if __name__ == '__main__' :
         '-l', '--logging', type = "string", default = None, dest = 'logdir',
         help = 'logging.'
     )
+    parser.add_option (
+        '-m', '--midi', action="store_true", dest="use_midi",
+        help = 'use midi device (launchpad).'
+    )
 
     (options, args) = parser.parse_args ()
     
     RTT_SCALE = options.scale
     LOGDIR    = options.logdir
+    USE_MIDI  = options.use_midi
 
     try :
         CONFIGFILE = args.pop ()
